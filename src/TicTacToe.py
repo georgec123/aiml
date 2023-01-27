@@ -12,12 +12,23 @@ class TicTacToe:
         self.moves = 0
 
     def print_board(self):
+        """
+        Print current state of the board
+        """
         for i in range(3):
             print(f"|{''.join(self.state[i*3:(i+1)*3:])}|")
         print('\n')
     
 
-    def verify_move(self, player, index):
+    def verify_move(self, player: str, index: int):
+        """
+        Verify if the move is a legal move via the criteria
+        - It is that players turn
+        - Player is currently playing the game
+        - Space is not alreay taken
+
+        :raises: ValueErro
+        """
         if player not in self.players:
             raise ValueError(f'Player must be in {self.players}, not {player}')
 
@@ -35,7 +46,7 @@ class TicTacToe:
         self.moves += 1
         self.last_turn = player
 
-    def fake_move(self, player, index, verify=True):
+    def fake_move(self, player: str, index: int, verify: bool=True) -> List[str]:
         if verify:
             self.verify_move(player, index)
 
@@ -44,7 +55,11 @@ class TicTacToe:
 
         return curr_state
 
-    def game_over(self):
+    def game_over(self)-> bool:
+        """
+        Checks to see if the game is over via all spaces being taken up
+        """
+
         if self.moves == 9:
             return True
         return False
@@ -98,7 +113,7 @@ class TicTacToe:
 
         return self._winner(curr_state)
 
-    def similar_states(self, curr_state=None) -> Tuple[str]:
+    def similar_states(self, curr_state: str=None) -> Tuple[str]:
         if curr_state is None:
             curr_state = self.state
 
@@ -127,6 +142,7 @@ class TicTacToe:
 
 
 def main():
+    # example of a tictactoe game
     ttt = TicTacToe()
     ttt.add_move('X', 1)
     ttt.add_move('O', 8)

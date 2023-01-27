@@ -2,26 +2,41 @@ from TicTacToe import TicTacToe
 from Players import Player
 from functools import lru_cache
 
+from typing import List
 import numpy as np
 import random
 
 
 class ReinforcementTicTacToeLearner:
 
-    def __init__(self, n: int, epsilon: float, opponent: Player, player: str = 'X') -> None:
+    def __init__(self, n: int, epsilon: float, opponent: Player, player: str = 'X',
+                 initial_reward: float=0.5) -> None:
+        """
 
+        :param n: number of iterations to learn over
+        :param epsilon: Probability to make a non greedy move
+        :param opponent: Instance of Player (or child of) to play against
+        :param player: Symbol to play with
+        :param initial_reward: Initial reward for unseen states
+        """
         self.state_dict = dict()
         self.epsilon = epsilon
         self.n = n
         self.player = player
         self.oppoent = opponent
+        self.initial_reward = initial_reward
+
 
         return
 
     @staticmethod
     @lru_cache
-    def get_state_key(states):
-        return sorted(states)[0]
+    def get_state_key(state: str):
+        """
+        Given symetries in states of board, we return the state key from a list of different states
+        """
+        similar_states = TicTacToe().similar_states(curr_state=state)
+        return sorted(similar_states)[0]
 
     def decide_next_move(self, board: TicTacToe):
 
@@ -35,9 +50,9 @@ class ReinforcementTicTacToeLearner:
         outcomes = [None]*len(possible_moves)
 
         for idx, move in enumerate(possible_moves):
+
             hyp_state = board.fake_move(player=self.player, index=move)
-            hyp_key = self.get_state_key(
-                board.similar_states(curr_state=hyp_state))
+            hyp_key = self.get_state_key(''.join(hyp_state))
 
             if hyp_key in self.state_dict:
                 outcomes[idx] = self.state_dict[hyp_key][0]
@@ -51,8 +66,8 @@ class ReinforcementTicTacToeLearner:
                 # next move would end in draw
                 outcomes[idx] = 0
             else:
-                # not seen before, default to 0.5
-                outcomes[idx] = 0.5
+                # not seen before, get default
+                outcomes[idx] = self.initial_reward
 
         # if there are multiple optimal choices, we pick randomly from those
         best_outcome = np.max(outcomes)
@@ -69,7 +84,6 @@ class ReinforcementTicTacToeLearner:
 
         if random.randint(0, 1):
             # other player goes first
-            # print('2 going first')
             game = self.oppoent.move(game)
             played_first = False
         else:
@@ -112,28 +126,32 @@ class ReinforcementTicTacToeLearner:
         wld = [None]*self.n
         """
         state_dict looks like 
-        {'state1': [probability, num_wins, num]}
+        {'state1': [probability, seen] }
         """
         for game_num in range(0, self.n):
 
             winner, state_moves, played_first = self.play_one_game()
-            result, increment = self.get_result_and_increment(winner)
+            result, reward = self.get_result_and_increment(winner)
 
             wld[game_num] = (played_first, result)
 
             for state in state_moves:
                 str_state = ''.join(state)
-                state_key = self.get_state_key(TicTacToe().similar_states(str_state))
+                state_key = self.get_state_key(str_state)
+
                 if state_key in self.state_dict:
-                    prob, won, played = self.state_dict[state_key]
-                    new_won = won + increment
-                    new_played = played + 1
-
-                    self.state_dict[state_key] = [
-                        new_won/new_played, new_won, new_played]
-
+                    q, seen_times = self.state_dict[state_key]
                 else:
-                    self.state_dict[state_key] = [increment, increment, 1]
+                    # not seen before, pick default
+                    q, seen_times = self.initial_reward, 0
+
+
+                # update reward
+                seen_times += 1
+                q = q + (reward - q)/(seen_times)
+                self.state_dict[state_key] = [q, seen_times]
+
+               
 
         return self.state_dict, wld
 

@@ -3,6 +3,9 @@ import random
 
 
 class Player:
+    """
+    Player class, children will define different ways of playing tictactoe.
+    """
     def __init__(self, player='O') -> None:
         self.player = player
         self.other_player = 'O' if player == 'X' else 'X'
@@ -14,10 +17,14 @@ class RandomPlayer(Player):
 
 
     def move(self, board: TicTacToe):
+        """
+        Look at possible moves avalailable, pick randomly from that.
+        
+        :param board: Current board in play
+        :returns: Board after move has been made
+        """
         possible_moves = board.possible_moves()
-
         chosen_move = random.choice(possible_moves)
-
         board.add_move(player=self.player, index=chosen_move)
         return board
 
@@ -27,9 +34,19 @@ class RandomWinner(Player):
         super().__init__(player)
 
     def move(self, board: TicTacToe):
+        """        
+        Look at possible moves avalailable, if we can win in the next play - make that play.
+        Else pick randomly from possible moves.
+        
+        :param board: Current board in play
+        :returns: Board after move has been made
+        """
+
         possible_moves = board.possible_moves()
 
         for move in possible_moves:
+            
+            # consider hypothetical state
             hyp_state = board.fake_move(player=self.player, index=move)
 
             # if we can win with this move, play that move
@@ -39,6 +56,7 @@ class RandomWinner(Player):
         
         move = random.choice(possible_moves)
         board.add_move(player=self.player, index=move)
+        
         return board
 
 
@@ -47,6 +65,17 @@ class RandomWinnerBlocker(Player):
         super().__init__(player)
 
     def move(self, board: TicTacToe):
+        """        
+        Look at possible moves avalailable.
+        
+        If we can win in the next play - make that play.
+        If the other player can win in the next move, we block that move.
+        Else pick randomly from possible moves.
+        
+        :param board: Current board in play
+        :returns: Board after move has been made
+        """
+
         possible_moves = board.possible_moves()
 
 
