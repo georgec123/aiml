@@ -11,6 +11,10 @@ class TicTacToe:
         self.state = [' ']*9
         self.moves = 0
 
+    def str_state(self):
+
+        return ''.join(self.state)
+
     def print_board(self):
         """
         Print current state of the board
@@ -64,9 +68,17 @@ class TicTacToe:
             return True
         return False
 
-
     @staticmethod
-    def _winner(curr_state):
+    def board_full(curr_state: str):
+        
+        if curr_state.count(' ') == 0:
+            return True
+        else: 
+            return False
+
+        
+    @staticmethod
+    def _winner(curr_state: str):
         
         def check_pos(pos, curr_state):
             first = curr_state[pos[0]]
