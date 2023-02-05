@@ -95,7 +95,7 @@ class StateDictX(dict):
 
 class ReinforcementTicTacToeLearner:
 
-    def __init__(self, n: int, epsilon: float, opponent: Player, player: str = 'X', play_first=True) -> None:
+    def __init__(self, n: int, epsilon: float, opponent: Player, player: str = 'X') -> None:
         """
 
         :param n: number of iterations to learn over
@@ -108,7 +108,6 @@ class ReinforcementTicTacToeLearner:
         self.n = n
         self.player = player
         self.oppoent = opponent
-        self.play_first = play_first
 
         return
 
@@ -125,10 +124,9 @@ class ReinforcementTicTacToeLearner:
         wld = [None]*self.n
 
         for game_num in range(self.n):
-            winner = self.learn_one_game()
+            winner, played_first = self.learn_one_game()
             result = self.get_result(winner)
-            wld[game_num] = result
-
+            wld[game_num] = [result, played_first]
         return wld
 
     def learn_one_move(self, game: TicTacToe):
@@ -147,9 +145,11 @@ class ReinforcementTicTacToeLearner:
 
         game = TicTacToe()
 
-        if self.play_first:
-        # if random.randint(0,1):
+        if random.randint(0,1):
             game, _ = self.learn_one_move(game)
+            played_first = True
+        else:
+            played_first = False
 
         while not game.game_over() and not game.winner():
             old_state = game.str_state()
@@ -167,7 +167,7 @@ class ReinforcementTicTacToeLearner:
             if did_greedy:
                 self.state_dict.update(old_state, game.str_state())
 
-        return game.winner()
+        return game.winner(), played_first
 
     def game_lost(self, board: TicTacToe):
         if board.winner() == self.player:
@@ -227,8 +227,11 @@ class ReinforcementTicTacToeLearner:
     def play_one_game(self):
         game = TicTacToe()
 
-        if self.play_first:
+        if random.randint(0,1):
+            played_first = True
             game = self.greedy_move(game)
+        else:
+            played_first = False
 
         while not game.game_over() and not game.winner():
 
@@ -241,13 +244,13 @@ class ReinforcementTicTacToeLearner:
             # we move
             game = self.greedy_move(game)
 
-        return game.winner()
+        return game.winner(), played_first
 
     def play_n_games(self, n):
         wld = [None]*n
         for game_num in range(n):
-            winner = self.play_one_game()
+            winner, played_first = self.play_one_game()
             result = self.get_result(winner)
-            wld[game_num] = result
+            wld[game_num] = [result, played_first]
 
         return wld
