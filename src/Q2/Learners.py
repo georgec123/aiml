@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 
 
@@ -9,7 +8,7 @@ np.random.seed(3)
 class Learner(ABC):
 
     def __init__(self, rounds: int, num_arms: int, epsilon: float, testbed: np.ndarray, testbed_means: np.ndarray) -> None:
-        
+
         self.rounds = rounds
         self.num_arms = num_arms
         self.epsilon = epsilon
@@ -21,8 +20,8 @@ class Learner(ABC):
         self.rewards = np.zeros(rounds)
         self.regret = np.zeros(rounds)
 
-        self.testbed = testbed 
-        self.testbed_means = testbed_means # Used for calculating regret
+        self.testbed = testbed
+        self.testbed_means = testbed_means  # Used for calculating regret
 
         self.t: int = None
 
@@ -43,7 +42,7 @@ class GreedyLearner(Learner):
         self.Q = np.ones(self.num_arms) * initial_value
 
     def update(self, action, reward):
-        
+
         self.N[action] += 1
 
         if self.alpha:
@@ -75,8 +74,8 @@ class GreedyLearner(Learner):
             self.update(action, reward)
             self.actions[t] = action
             self.rewards[t] = reward
-            self.regret[t] = np.max(self.testbed_means[t]) - self.testbed_means[t][action]
-
+            self.regret[t] = np.max(self.testbed_means[t]) - \
+                self.testbed_means[t][action]
 
 
 class GreedyUCBLearner(GreedyLearner):
@@ -100,4 +99,3 @@ class GreedyUCBLearner(GreedyLearner):
 
         A = np.argmax(Q_v)
         return A
-

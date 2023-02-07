@@ -1,16 +1,33 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import Tuple
 
-def parse_wld(wld: list, played_first: bool=True):
 
+def parse_wld(wld: list, played_first: bool = True) -> Tuple[list, float]:
+    """
+    Parse the wld list to get the win percentage for a given player
+
+    :param wld: list of tuples (result, played_first)
+    :param played_first: player to get win percentage for  
+
+    :return: list of results for given player, win percentage
+    """
     turn_wld = [x[0] for x in wld if x[1] is played_first]
-    win_pct = 100*np.sum([1 if x == 'w' else 0 for x in turn_wld]) / len(turn_wld)
+    win_pct = 100 * \
+        np.sum([1 if x == 'w' else 0 for x in turn_wld]) / len(turn_wld)
 
     return turn_wld, win_pct
 
 
-def plot_wld(wld):
+def plot_wld(wld: list) -> Tuple[plt.Figure, plt.Axes]:
+    """
+    Plot the win/loss/draw results for both players
 
+    
+    :param wld: list of tuples (result, played_first)
+
+    :return: figure, axes
+    """
     def subplot(wld_arr, ax):
 
         ws = np.cumsum([1 if x == 'w' else 0 for x in wld_arr])

@@ -2,7 +2,7 @@ from TicTacToe import TicTacToe
 from Players import Player
 from functools import lru_cache
 
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import random
 
@@ -10,7 +10,7 @@ import random
 class StateDictX(dict):
     """
     Data structure to hold state and rewards.
-    Abstracts updating formula
+    Abstracts updating formula using the sample average method.
 
     {
         'state_key': [reward, num_times_seen]
@@ -62,7 +62,7 @@ class StateDictX(dict):
 
         return self[state_key][0]
 
-    def get(self, state: str) :
+    def get(self, state: str):
         """
         Return reward and num_seen of current state. 
         Ensures state is initialised first.
@@ -113,14 +113,23 @@ class ReinforcementTicTacToeLearner:
 
     @staticmethod
     @lru_cache
-    def get_state_key(state: str):
+    def get_state_key(state: str) -> str:
         """
-        Given symetries in states of board, we return the state key from a list of different states
+        Given symetries in states of board, we return the state key from a list of different states.
+        We cache this function to speed up the learning process.
+
+        :param state: String state of board
+        :return: String state key
         """
         similar_states = TicTacToe().similar_states(curr_state=state)
         return sorted(similar_states)[0]
 
-    def learn(self):
+    def learn(self) -> List[Tuple[str, bool]]:
+        """
+        Learn n games of tic tac toe.
+
+        :return: List of tuples of (winner, if we played first)
+        """
         wld = [None]*self.n
 
         for game_num in range(self.n):
@@ -129,7 +138,13 @@ class ReinforcementTicTacToeLearner:
             wld[game_num] = [result, played_first]
         return wld
 
-    def learn_one_move(self, game: TicTacToe):
+    def learn_one_move(self, game: TicTacToe) -> Tuple[TicTacToe, bool]:
+        """
+        Play one move, learning as we go
+
+        :param game: Board of TicTacToe
+        :return: Board of TicTacToe after move, and if we played greedy
+        """
         # we move
         if random.uniform(0, 1) < self.epsilon:
             game = self.random_move(board=game)
@@ -141,11 +156,15 @@ class ReinforcementTicTacToeLearner:
 
         return game, did_greedy
 
-    def learn_one_game(self):
+    def learn_one_game(self) -> Tuple[str, bool]:
+        """
+        Play one game of tic tac toe, learning as we go
 
+        :return: Winner of game, and if we played first
+        """
         game = TicTacToe()
 
-        if random.randint(0,1):
+        if random.randint(0, 1):
             game, _ = self.learn_one_move(game)
             played_first = True
         else:
@@ -169,7 +188,12 @@ class ReinforcementTicTacToeLearner:
 
         return game.winner(), played_first
 
-    def game_lost(self, board: TicTacToe):
+    def game_lost(self, board: TicTacToe) -> bool:
+        """
+        Check if the game is lost (draw or opponent won)
+
+        :param board: Current state of board
+        """
         if board.winner() == self.player:
             return False
         elif board.game_over() or board.winner():
@@ -178,7 +202,13 @@ class ReinforcementTicTacToeLearner:
             return False
 
     def random_move(self, board: TicTacToe) -> TicTacToe:
+        """
+        Pick a random move
 
+        :param board: Current state of board
+
+        :return: New board with move made
+        """
         possible_moves = board.possible_moves()
 
         move = random.choice(possible_moves)
@@ -187,7 +217,13 @@ class ReinforcementTicTacToeLearner:
         return board
 
     def greedy_move(self, board: TicTacToe) -> TicTacToe:
+        """
+        Pick the best move based on the current state_dict
 
+        :param board: Current state of board
+
+        :return: New board with move made
+        """
         possible_moves = board.possible_moves()
         outcomes = [None]*len(possible_moves)
 
@@ -211,6 +247,8 @@ class ReinforcementTicTacToeLearner:
 
     def get_result(self, winner: str) -> str:
         """
+        Convert winner (X, O, ) to result (w, l, d)
+
         returns: result
         """
         # gameover
@@ -224,10 +262,15 @@ class ReinforcementTicTacToeLearner:
             # we lost
             return 'l'
 
-    def play_one_game(self):
+    def play_one_game(self) -> Tuple[str, bool]:
+        """
+        Play one game against opponent, don't learn and always take greedy actions.
+
+        returns: winner, played_first
+        """
         game = TicTacToe()
 
-        if random.randint(0,1):
+        if random.randint(0, 1):
             played_first = True
             game = self.greedy_move(game)
         else:
@@ -246,7 +289,14 @@ class ReinforcementTicTacToeLearner:
 
         return game.winner(), played_first
 
-    def play_n_games(self, n):
+    def play_n_games(self, n: int) -> List[Tuple[str, bool]]:
+        """
+        Play n games against opponent, don't learn and always take greedy actions.
+
+        :param n: number of games to play
+
+        :return: list of tuples (result, played_first)
+        """
         wld = [None]*n
         for game_num in range(n):
             winner, played_first = self.play_one_game()
